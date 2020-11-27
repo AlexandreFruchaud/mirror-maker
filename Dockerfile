@@ -1,17 +1,28 @@
-FROM bitnami/kafka:2
-USER root
-RUN install_packages gettext
+clusters = europe, china
 
-ADD ./mm2.template /opt/mirrormaker/mm2.template
-ADD ./run.sh /opt/mirrormaker/run.sh
-RUN chmod +x /opt/mirrormaker/run.sh
+europe.bootstrap.servers = ${SOURCE}
+china.bootstrap.servers = ${DESTINATION}
 
-RUN mkdir -p /var/run/mirrormaker
-RUN chown 1234 /var/run/mirrormaker
+europe->china.enabled = true
+europe->china.topics = ${TOPICS}
 
-ENV TOPICS .*
-ENV DESTINATION "source-cluster:9092"
-ENV SOURCE "localhost:9092"
+# Prevent topics from getting prefixed
+# This is fine as long as we have only one way replication
+replication.policy.separator: 
+source.cluster.alias: 
+target.cluster.alias: 
 
-USER 1234
-CMD /opt/mirrormaker/run.sh
+checkpoints.topic.replication.factor=3
+heartbeats.topic.replication.factor=3
+offset-syncs.topic.replication.factor=3
+
+offset.storage.replication.factor=3
+status.storage.replication.factor=3
+config.storage.replication.factor=3
+
+sync.topic.acls.enabled = true
+tasks.max = ${TASKS_MAX}
+replication.factor = 3
+refresh.topics.enabled = true
+sync.topic.configs.enabled = true
+refresh.topic.interval.seconds = ${REFRESH_TOPIC_INTERVAL_SECONDS}
